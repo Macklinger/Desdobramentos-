@@ -1,0 +1,147 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desdobrador de Loterias</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #f1c40f;
+    }
+    .form-group {
+      margin: 20px 0;
+    }
+    label {
+      font-size: 1.2em;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: none;
+      width: 100%;
+      max-width: 300px;
+    }
+    button {
+      background-color: #e74c3c;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #27ae60;
+    }
+    #resultados {
+      background-color: #064635;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 10px;
+      text-align: left;
+    }
+    .results h2 {
+      color: #f1c40f;
+    }
+    footer {
+      margin-top: 30px;
+      background-color: #064635;
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Desdobrador de Loterias</h1>
+  <div>
+    <form id="desdobramentoForm">
+      <div class="form-group">
+        <label for="quantidadeFixas">Quantidade de dezenas fixas:</label>
+        <input type="text" id="quantidadeFixas" min="0" max="10" required>
+      </div>
+      <div class="form-group">
+        <label for="dezenasFixas">Dezenas fixas (separadas por vírgula):</label>
+        <input type="text" id="dezenasFixas" placeholder="Ex: 1,5,10">
+      </div>
+      <div class="form-group">
+        <label for="quantidadeDesdobrar">Quantidade de dezenas a desdobrar:</label>
+        <input type="number" id="quantidadeDesdobrar" min="1" max="50" required>
+      </div>
+      <div class="form-group">
+        <label for="dezenasDesdobrar">Dezenas a desdobrar (separadas por vírgula):</label>
+        <input type="text" id="dezenasDesdobrar" placeholder="Ex: 2,3,6,12">
+      </div>
+      <div class="form-group">
+        <label for="quantidadeJogos">Quantidade de jogos desejados:</label>
+        <input type="number" id="quantidadeJogos" min="1" max="1000" required>
+      </div>
+      <button type="button" onclick="gerarDesdobramento()">Gerar Desdobramento</button>
+    </form>
+    <div id="resultados" class="results"></div>
+  </div>
+  <!-- Rodapé -->
+  <footer>
+    <p>Mac Point é um site independente dedicado a fornecer análises, ferramentas e informações sobre as loterias brasileiras. Não temos vínculo com a Caixa Econômica Federal ou qualquer outra entidade governamental. Para resultados oficiais, consulte os canais oficiais de cada loteria.</p>
+    <p>© 2024  Portal de Loterias - Mac Point. Todos os direitos reservados.</p>
+  </footer>
+  <script>
+    function gerarDesdobramento() {
+      const resultadosDiv = document.getElementById('resultados');
+      resultadosDiv.innerHTML = '';
+
+      const quantidadeFixas = parseInt(document.getElementById('quantidadeFixas').value);
+      const dezenasFixas = document.getElementById('dezenasFixas').value.split(',').map(Number);
+      const quantidadeDesdobrar = parseInt(document.getElementById('quantidadeDesdobrar').value);
+      const dezenasDesdobrar = document.getElementById('dezenasDesdobrar').value.split(',').map(Number);
+      const quantidadeJogos = parseInt(document.getElementById('quantidadeJogos').value);
+
+      if (isNaN(quantidadeFixas) || isNaN(quantidadeDesdobrar) || isNaN(quantidadeJogos)) {
+        alert('Por favor, preencha todos os campos corretamente.');
+        return;
+      }
+      if (dezenasFixas.length !== quantidadeFixas) {
+        alert('A quantidade de dezenas fixas não corresponde ao número informado.');
+        return;
+      }
+      if (dezenasDesdobrar.length < quantidadeDesdobrar) {
+        alert('A quantidade de dezenas para desdobrar não é suficiente.');
+        return;
+      }
+      if (quantidadeJogos > 1000) {
+        alert('O limite máximo é de 1000 jogos.');
+        return;
+      }
+
+      const resultados = [];
+      for (let i = 0; i < quantidadeJogos; i++) {
+        const jogo = [...dezenasFixas];
+        const dezenasDisponiveis = [...dezenasDesdobrar];
+
+        while (jogo.length < quantidadeFixas + quantidadeDesdobrar) {
+          const randomIndex = Math.floor(Math.random() * dezenasDisponiveis.length);
+          const numero = dezenasDisponiveis.splice(randomIndex, 1)[0];
+          if (!jogo.includes(numero)) {
+            jogo.push(numero);
+          }
+        }
+        resultados.push(jogo.sort((a, b) => a - b));
+      }
+
+      resultadosDiv.innerHTML = '<h2>Resultados:</h2>';
+      resultados.forEach((jogo, index) => {
+        resultadosDiv.innerHTML += `<p>Jogo ${index + 1}: ${jogo.join(', ')}</p>`;
+      });
+    }
+  </script>
+</body>
+</html>
+
