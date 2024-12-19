@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Grupos - Loterias</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #006400;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        canvas {
+            display: block;
+            max-width: 100%;
+            margin: auto;
+        }
+        #inputResults, select, button {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #inputResults {
+            width: 80%;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #fff;
+        }
+        button {
+            background-color: orange;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff9900;
+        }
+        .chart-title {
+            color: yellow;
+        }
+        #analysis {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="chart-title">Análise de Grupos - Loterias</h2>
+        <select id="lotteryType">
+            <option value="mega-sena">Mega Sena</option>
+            <option value="quina">Quina</option>
+            <option value="lotofacil">Lotofácil</option>
+            <option value="dupla-sena">Dupla Sena</option>
+            <option value="timemania">Timemania</option>
+        </select><br>
+        <input type="text" id="inputResults" placeholder="Ex: 01,10,19,28,37,46">
+        <button onclick="analyzeResults()">Analisar</button>
+    </div>
+
+    <div class="container">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <div id="analysis" class="container"></div>
+
+    <script>
+        const lotteryConfig = {
+            "mega-sena": {
+                maxNumber: 60,
+                groups: [
+                    [1, 10, 19, 28, 37, 46, 55],
+                    [2, 11, 20, 29, 38, 47, 56],
+                    [3, 12, 21, 30, 39, 48, 57],
+                    [4, 13, 22, 31, 40, 49, 58],
+                    [5, 14, 23, 32, 41, 50, 59],
+                    [6, 15, 24, 33, 42, 51, 60],
+                    [7, 16, 25, 34, 43, 52],
+                    [8, 17, 26, 35, 44, 53],
+                    [9, 18, 27, 36, 45, 54]
+                ]
+            },
+            "quina": {
+                maxNumber: 80,
+                groups: Array.from({ length: 8 }, (_, i) =>
+                    Array.from({ length: 10 }, (_, j) => i * 10 + j + 1)
+                )
+            },
+            "lotofacil": {
+                maxNumber: 25,
+                groups: Array.from({ length: 5 }, (_, i) =>
+                    Array.from({ length: 5 }, (_, j) => i * 5 + j + 1)
+                )
+            },
+            "dupla-sena": {
+                maxNumber: 50,
+                groups: Array.from({ length: 5 }, (_, i) =>
+                    Array.from({ length: 10 }, (_, j) => i * 10 + j + 1)
+                )
+            },
+            "timemania": {
+                maxNumber: 80,
+                groups: Array.from({ length: 8 }, (_, i) =>
+                    Array.from({ length: 10 }, (_, j) => i * 10 + j + 1)
+                )
+            }
+        };
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Quantidade de Sorteios por Grupo',
+                    data: [],
+                    backgroundColor: 'rgba(0, 255, 0, 0.5)',
+                    borderColor: 'rgba(0, 255, 0, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        ticks: { color: '#fff' }
+                    },
+                    y: {
+                        ticks: { color: '#fff' },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: 'yellow' }
+                    }
+                }
+            }
+        });
+
+        function analyzeResults() {
+            const lotteryType = document.getElementById('lotteryType').value;
+            const input = document.getElementById('inputResults').value;
+            const results = input.split(',').map(num => parseInt(num.trim()));
+
+            const config = lotteryConfig[lotteryType];
+            if (!config) {
+                alert("Modalidade inválida!");
+                return;
+            }
+
+            const groups = config.groups;
+            const data = Array(groups.length).fill(0);
+
+            results.forEach(num => {
+                if (num > 0 && num <= config.maxNumber) {
+                    groups.forEach((group, index) => {
+                        if (group.includes(num)) {
+                            data[index]++;
+                        }
+                    });
+                }
+            });
+
+            myChart.data.labels = groups.map((_, i) => `Grupo ${i + 1}`);
+            myChart.data.datasets[0].data = data;
+            myChart.update();
+
+            generateStatistics(results, groups);
+        }
+
+        function generateStatistics(results, groups) {
+            const analysisContainer = document.getElementById('analysis');
+            analysisContainer.innerHTML = "";
+
+            const groupOccurrences = groups.map(() => []);
+            const totalGroupCounts = Array(groups.length).fill(0);
+
+            results.forEach(num => {
+                groups.forEach((group, index) => {
+                    if (group.includes(num)) {
+                        groupOccurrences[index].push(num);
+                        totalGroupCounts[index]++;
+                    }
+                });
+            });
+
+            groups.forEach((group, index) => {
+                const occurrences = groupOccurrences[index];
+                const uniqueOccurrences = [...new Set(occurrences)];
+                const counts = uniqueOccurrences.map(num => ({
+                    num,
+                    count: occurrences.filter(x => x === num).length
+                }));
+                counts.sort((a, b) => b.count - a.count);
+                const delays = group.filter(num => !results.includes(num));
+
+                analysisContainer.innerHTML += `
+                    <h3>Grupo ${index + 1}</h3>
+                    <p>Total de ocorrências: ${totalGroupCounts[index]}</p>
+                    <p>Dezenas fortes: ${counts.slice(0, 3).map(c => `${c.num} (${c.count}x)`).join(', ')}</p>
+                    <p>Dezenas com maior atraso: ${delays.join(', ')}</p>
+                    <p>Distribuição: ${(totalGroupCounts[index] / results.length * 100).toFixed(2)}%</p>
+                    <hr>
+                `;
+            });
+
+            const maxGroup = totalGroupCounts.indexOf(Math.max(...totalGroupCounts)) + 1;
+            analysisContainer.innerHTML += `
+                <h3>Resumo Geral</h3>
+                <p>Grupo mais frequente: Grupo ${maxGroup}</p>
+                <p>Dezenas mais fortes: ${groups[maxGroup - 1].join(', ')}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
